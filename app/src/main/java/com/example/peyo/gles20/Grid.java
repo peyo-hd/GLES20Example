@@ -31,10 +31,6 @@ public class Grid extends GLES20 {
         mMVPMatrixHandle = mvp;
     }
 
-    public void setMVPHandle(int mvpMatrixHandle) {
-
-    }
-
     public void draw(float[] mvpMatrix) {
         mMVPMatrix = mvpMatrix;
 

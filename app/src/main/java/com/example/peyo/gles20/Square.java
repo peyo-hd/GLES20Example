@@ -1,13 +1,8 @@
 package com.example.peyo.gles20;
 
-import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
-
-import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
 
 public class Square extends GLES20 {
 
@@ -20,18 +15,19 @@ public class Square extends GLES20 {
     static float texmap[] = {
             0, 1,  1, 1,  1, 0,  0, 0};
 
-    private FloatBuffer vertexBuffer;
-    private ShortBuffer orderBuffer;
-    private FloatBuffer texmapBuffer;
+    private int vertexVBO[] = new int[1];
+    private int orderVBO[] =  new int[1];
+    private int texmapVBO[] =  new int[1];
+
     private int texId;
     private int mSamplerHandle;
     private int mPositionHandle;
     private int mTexCoordHandle;
 
     public Square(int position, int tex) {
-        vertexBuffer = GLToolbox.loadBuffer(coords);
-        orderBuffer = GLToolbox.loadBuffer(order);
-        texmapBuffer = GLToolbox.loadBuffer(texmap);
+        GLToolbox.loadFloatVBO(vertexVBO, coords);
+        GLToolbox.loadFloatVBO(texmapVBO, texmap);
+        GLToolbox.loadElementVBO(orderVBO, order);
 
         mPositionHandle = position;
         mTexCoordHandle = tex;
@@ -55,11 +51,14 @@ public class Square extends GLES20 {
         glBindTexture(GL_TEXTURE_2D, texId);
         glUniform1i(mSamplerHandle, 0);
 
-        glVertexAttribPointer(mPositionHandle, 3, GL_FLOAT, false,
-                3 * 4, vertexBuffer);
-        glVertexAttribPointer(mTexCoordHandle, 2, GL_FLOAT, false,
-                2 * 4, texmapBuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, vertexVBO[0]);
+        glVertexAttribPointer(mPositionHandle, 3, GL_FLOAT, false, 3*4, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, texmapVBO[0]);
+        glVertexAttribPointer(mTexCoordHandle, 2, GL_FLOAT, false, 2*4, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        glDrawElements(GL_TRIANGLES, order.length, GLES20.GL_UNSIGNED_SHORT, orderBuffer);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, orderVBO[0]);
+        glDrawElements(GL_TRIANGLES, order.length, GLES20.GL_UNSIGNED_SHORT, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 }

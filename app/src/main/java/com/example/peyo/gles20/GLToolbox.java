@@ -23,18 +23,18 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-public class GLToolbox {
+public class GLToolbox extends GLES20 {
 
     public static int loadShader(int shaderType, String source) {
-        int shader = GLES20.glCreateShader(shaderType);
+        int shader = glCreateShader(shaderType);
         if (shader != 0) {
-            GLES20.glShaderSource(shader, source);
-            GLES20.glCompileShader(shader);
+            glShaderSource(shader, source);
+            glCompileShader(shader);
             int[] compiled = new int[1];
-            GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0);
+            glGetShaderiv(shader, GL_COMPILE_STATUS, compiled, 0);
             if (compiled[0] == 0) {
-                String info = GLES20.glGetShaderInfoLog(shader);
-                GLES20.glDeleteShader(shader);
+                String info = glGetShaderInfoLog(shader);
+                glDeleteShader(shader);
                 throw new RuntimeException("Could not compile shader " + shaderType + ":" + info);
             }
         }
@@ -42,26 +42,26 @@ public class GLToolbox {
     }
 
     public static int createProgram(String vertexSource, String fragmentSource) {
-        int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexSource);
+        int vertexShader = loadShader(GL_VERTEX_SHADER, vertexSource);
         if (vertexShader == 0) {
             return 0;
         }
-        int pixelShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentSource);
+        int pixelShader = loadShader(GL_FRAGMENT_SHADER, fragmentSource);
         if (pixelShader == 0) {
             return 0;
         }
 
-        int program = GLES20.glCreateProgram();
+        int program = glCreateProgram();
         if (program != 0) {
-            GLES20.glAttachShader(program, vertexShader);
-            GLES20.glAttachShader(program, pixelShader);
-            GLES20.glLinkProgram(program);
+            glAttachShader(program, vertexShader);
+            glAttachShader(program, pixelShader);
+            glLinkProgram(program);
             int[] linkStatus = new int[1];
-            GLES20.glGetProgramiv(program, GLES20.GL_LINK_STATUS, linkStatus,
+            glGetProgramiv(program, GL_LINK_STATUS, linkStatus,
                     0);
-            if (linkStatus[0] != GLES20.GL_TRUE) {
-                String info = GLES20.glGetProgramInfoLog(program);
-                GLES20.glDeleteProgram(program);
+            if (linkStatus[0] != GL_TRUE) {
+                String info = glGetProgramInfoLog(program);
+                glDeleteProgram(program);
                 throw new RuntimeException("Could not link program: " + info);
             }
         }
@@ -86,6 +86,24 @@ public class GLToolbox {
         sbuffer.put(sarray);
         sbuffer.position(0);
         return sbuffer;
+    }
+
+    static public void loadFloatVBO(int[] vbo, float[] farray) {
+        FloatBuffer buffer = GLToolbox.loadBuffer(farray);
+        glGenBuffers(1, vbo, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+        glBufferData(GL_ARRAY_BUFFER, buffer.capacity() * 4,
+                buffer, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
+    static public void loadElementVBO(int[] vbo, short[] sarray) {
+        ShortBuffer buffer = GLToolbox.loadBuffer(sarray);
+        glGenBuffers(1, vbo, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[0]);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, buffer.capacity() * 2,
+                buffer, GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
 }
