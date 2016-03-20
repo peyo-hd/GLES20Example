@@ -50,13 +50,8 @@ public class Grid extends GLES20 {
     }
 
     private void translate(float x, float y, float z) {
-        float[] transMatrix = new float[16];
-        float[] mvpMatrix2 = new float[16];
-
-        Matrix.setIdentityM(transMatrix,0);
-        Matrix.translateM(transMatrix, 0, x, y, z);
-        Matrix.multiplyMM(mvpMatrix2, 0, mMVPMatrix, 0, transMatrix, 0);
-
-        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix2, 0);
+        float[] mvpMatrix = new float[16];
+        Matrix.translateM(mvpMatrix, 0, mMVPMatrix, 0, x, y, z);
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
     }
 }

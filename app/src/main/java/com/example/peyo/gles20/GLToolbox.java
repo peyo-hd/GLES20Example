@@ -92,8 +92,7 @@ public class GLToolbox extends GLES20 {
         FloatBuffer buffer = GLToolbox.loadBuffer(farray);
         glGenBuffers(1, vbo, 0);
         glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-        glBufferData(GL_ARRAY_BUFFER, buffer.capacity() * 4,
-                buffer, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, buffer.capacity() * 4, buffer, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
@@ -101,8 +100,7 @@ public class GLToolbox extends GLES20 {
         ShortBuffer buffer = GLToolbox.loadBuffer(sarray);
         glGenBuffers(1, vbo, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[0]);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, buffer.capacity() * 2,
-                buffer, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, buffer.capacity() * 2, buffer, GL_STATIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 

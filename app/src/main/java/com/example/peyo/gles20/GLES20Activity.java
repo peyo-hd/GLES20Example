@@ -70,6 +70,7 @@ public class GLES20Activity extends Activity implements GLSurfaceView.Renderer {
     Triangle mTriangle;
     Square mSquare;
     Grid mGrid;
+    Sphere mSphere;
     Column mColumn;
 
     private float mAngle = 0;
@@ -121,18 +122,26 @@ public class GLES20Activity extends Activity implements GLSurfaceView.Renderer {
         mGrid = new Grid(mPositionHandle0, mColorHandle0, mMVPMatrixHandle0);
         mTriangle = new Triangle(mPositionHandle0, mColorHandle0);
         mSquare = new Square(mPositionHandle1, mTexCoordHandle);
-
-        mObjLoader.load("column.obj");
-        mColumn = new Column(mObjLoader.vertices, mPositionHandle2, mColorHandle2);
+        mSphere = new Sphere(mPositionHandle1, mTexCoordHandle);
 
         Bitmap bmp = BitmapFactory.decodeResource(getResources(), R.drawable.ground);
         mSquare.setTexture(mSamplerHandle, bmp);
         bmp.recycle();
 
+        bmp = BitmapFactory.decodeResource(getResources(), R.drawable.globe);
+        mSphere.setTexture(mSamplerHandle, bmp);
+        bmp.recycle();
+
+        mObjLoader.load("column.obj");
+        mColumn = new Column(mObjLoader.vertices, mPositionHandle2, mColorHandle2);
+
         GLES20.glEnableVertexAttribArray(mPositionHandle0);
         GLES20.glEnableVertexAttribArray(mColorHandle0);
         GLES20.glEnableVertexAttribArray(mPositionHandle1);
         GLES20.glEnableVertexAttribArray(mTexCoordHandle);
+        GLES20.glEnableVertexAttribArray(mPositionHandle2);
+
+        GLES20.glEnable(GLES20.GL_CULL_FACE);
     }
 
     @Override
@@ -156,20 +165,22 @@ public class GLES20Activity extends Activity implements GLSurfaceView.Renderer {
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle0, 1, false, mvpMatrix, 0);
         mGrid.draw(mvpMatrix);
 
+        float[] mvpMatrix1 = new float[16];
+        Matrix.translateM(mvpMatrix1, 0, mvpMatrix, 0, -4, 0, -4);
         GLES20.glUseProgram(mProgram1);
-        GLES20.glUniformMatrix4fv(mMVPMatrixHandle1, 1, false, mvpMatrix, 0);
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle1, 1, false, mvpMatrix1, 0);
         mSquare.draw();
-
         GLES20.glUseProgram(mProgram0);
-        GLES20.glUniformMatrix4fv(mMVPMatrixHandle0, 1, false, mvpMatrix, 0);
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle0, 1, false, mvpMatrix1, 0);
         mTriangle.draw();
 
-        float[] rotationMatrix = new float[16];
-        Matrix.setRotateM(rotationMatrix, 0, ++mAngle,  0, 1, 0);
-        Matrix.multiplyMM(mvpMatrix, 0, mvpMatrix, 0, rotationMatrix, 0);
-
+        float[] mvpMatrix2 = new float[16];
+        Matrix.rotateM(mvpMatrix2, 0, mvpMatrix, 0, ++mAngle,  0, 1, 0);
+        GLES20.glUseProgram(mProgram1);
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle1, 1, false, mvpMatrix2, 0);
+        mSphere.draw();
         GLES20.glUseProgram(mProgram2);
-        GLES20.glUniformMatrix4fv(mMVPMatrixHandle2, 1, false, mvpMatrix, 0);
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle2, 1, false, mvpMatrix2, 0);
         mColumn.draw();
     }
 
@@ -178,5 +189,6 @@ public class GLES20Activity extends Activity implements GLSurfaceView.Renderer {
         super.onDestroy();
         GLES20.glDeleteProgram(mProgram0);
         GLES20.glDeleteProgram(mProgram1);
+        GLES20.glDeleteProgram(mProgram2);
     }
 }

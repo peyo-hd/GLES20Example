@@ -75,7 +75,7 @@ public class ObjLoader {
                 if (F.length == 5) {
                     vf++;
                     vf++;
-                } else {
+                } else if (F.length == 4){
                     vf++;
                 }
             }
