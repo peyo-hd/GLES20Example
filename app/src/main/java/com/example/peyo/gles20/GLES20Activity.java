@@ -8,75 +8,35 @@ import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.os.Bundle;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 public class GLES20Activity extends Activity implements GLSurfaceView.Renderer {
 
-    private static final String TAG = "Ex01Activity";
-
-    private final String vertexShaderCode0 =
-            "uniform mat4 uMVPMatrix0;" +
-                    "attribute vec4 aPosition0;" +
-                    "attribute vec4 aColor0;" +
-                    "varying vec4 vColor;" +
-                    "void main() {" +
-                    "  gl_Position = uMVPMatrix0 * aPosition0;" +
-                    "  vColor = aColor0;" +
-                    "}";
-
-    private final String fragmentShaderCode0 =
-            "precision mediump float;" +
-                    "varying vec4 vColor;" +
-                    "void main() {" +
-                    "  gl_FragColor = vColor;" +
-                    "}";
-
-    private final String vertexShaderCode1 =
-            "uniform mat4 uMVPMatrix1;" +
-                    "attribute vec4 aPosition1;" +
-                    "attribute vec2 aTexCoord;" +
-                    "varying vec2 vTexCoord;" +
-                    "void main() {" +
-                    "  gl_Position = uMVPMatrix1 * aPosition1;" +
-                    "  vTexCoord = aTexCoord;" +
-                    "}";
-
-    private final String fragmentShaderCode1 =
-            "precision mediump float;" +
-                    "varying vec2 vTexCoord;" +
-                    "uniform sampler2D samplerTex;" +
-                    "void main() {" +
-                    "  gl_FragColor = texture2D(samplerTex, vTexCoord);" +
-                    "}";
-
-    private final String vertexShaderCode2 =
-            "uniform mat4 uMVPMatrix2;" +
-                    "attribute vec4 aPosition2;" +
-                    "void main() {" +
-                    "  gl_Position = uMVPMatrix2 * aPosition2;" +
-                    "}";
-
-    private final String fragmentShaderCode2 =
-            "precision mediump float;" +
-                    "uniform vec4 uColor2;" +
-                    "void main() {" +
-                    "  gl_FragColor = uColor2;" +
-                    "}";
+    private static final String TAG = "GLES20Activity";
 
     private int mProgram0;
-    private int mProgram1;
-    private int mProgram2;
+    private int mMVPMatrixHandle0;
     Triangle mTriangle;
-    Square mSquare;
     Grid mGrid;
+
+    private int mProgram1;
+    private int mMVPMatrixHandle1;
+    Square mSquare;
     Sphere mSphere;
+
+    private int mProgram2;
+    private int mMVPMatrixHandle2;
+    ObjLoader mObjLoader;
     Column mColumn;
 
     private float mAngle = 0;
     private float mRatio = 1.0f;
-
-    private ObjLoader mObjLoader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,61 +46,51 @@ public class GLES20Activity extends Activity implements GLSurfaceView.Renderer {
         view.setRenderer(this);
         setContentView(view);
         mObjLoader = new ObjLoader(this);
+        mObjLoader.load("column.obj");
     }
-
-    private int mPositionHandle0;
-    private int mColorHandle0;
-    private int mPositionHandle1;
-    private int mTexCoordHandle;
-    private int mPositionHandle2;
-    private int mColorHandle2;
-
-    private int mMVPMatrixHandle0;
-    private int mMVPMatrixHandle1;
-    private int mSamplerHandle;
-    private int mMVPMatrixHandle2;
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        mProgram0 = GLToolbox.createProgram(vertexShaderCode0, fragmentShaderCode0);
-        mProgram1 = GLToolbox.createProgram(vertexShaderCode1, fragmentShaderCode1);
-        mProgram2 = GLToolbox.createProgram(vertexShaderCode2, fragmentShaderCode2);
+        mProgram0 = GLToolbox.createProgram(readShader(R.raw.color_vertex), readShader(R.raw.color_fragment));
+        mMVPMatrixHandle0 = GLES20.glGetUniformLocation(mProgram0, "uMVPMatrix");
+        int aPositionHandle = GLES20.glGetAttribLocation(mProgram0, "aPosition");
+        int aColorHandle = GLES20.glGetAttribLocation(mProgram0, "aColor");
+        GLES20.glEnableVertexAttribArray(aPositionHandle);
+        GLES20.glEnableVertexAttribArray(aColorHandle);
 
-        mPositionHandle0 = GLES20.glGetAttribLocation(mProgram0, "aPosition0");
-        mColorHandle0 = GLES20.glGetAttribLocation(mProgram0, "aColor0");
-        mPositionHandle1 = GLES20.glGetAttribLocation(mProgram1, "aPosition1");
-        mTexCoordHandle = GLES20.glGetAttribLocation(mProgram1, "aTexCoord");
-        mPositionHandle2 = GLES20.glGetAttribLocation(mProgram2, "aPosition2");
+        mGrid = new Grid(aPositionHandle, aColorHandle, mMVPMatrixHandle0);
+        mTriangle = new Triangle(aPositionHandle, aColorHandle);
+        GLToolbox.checkGLError(TAG, "Program and Object for Grid/Triangle");
 
-        mMVPMatrixHandle0 = GLES20.glGetUniformLocation(mProgram0, "uMVPMatrix0");
-        mSamplerHandle = GLES20.glGetUniformLocation(mProgram1, "samplerTex");
-        mMVPMatrixHandle1 = GLES20.glGetUniformLocation(mProgram1, "uMVPMatrix1");
-        mMVPMatrixHandle2 = GLES20.glGetUniformLocation(mProgram2, "uMVPMatrix2");
-        mColorHandle2 = GLES20.glGetUniformLocation(mProgram2, "uColor2");
+        mProgram1 = GLToolbox.createProgram(readShader(R.raw.texture_vertex), readShader(R.raw.texture_fragment));
+        mMVPMatrixHandle1 = GLES20.glGetUniformLocation(mProgram1, "uMVPMatrix");
+        aPositionHandle = GLES20.glGetAttribLocation(mProgram1, "aPosition");
+        int aTexCoordHandle = GLES20.glGetAttribLocation(mProgram1, "aTexCoord");
+        int uSamplerHandle = GLES20.glGetUniformLocation(mProgram1, "uSamplerTex");
+        GLES20.glEnableVertexAttribArray(aPositionHandle);
+        GLES20.glEnableVertexAttribArray(aTexCoordHandle);
 
-        mGrid = new Grid(mPositionHandle0, mColorHandle0, mMVPMatrixHandle0);
-        mTriangle = new Triangle(mPositionHandle0, mColorHandle0);
-        mSquare = new Square(mPositionHandle1, mTexCoordHandle);
-        mSphere = new Sphere(mPositionHandle1, mTexCoordHandle);
-
+        mSquare = new Square(aPositionHandle, aTexCoordHandle);
         Bitmap bmp = BitmapFactory.decodeResource(getResources(), R.drawable.ground);
-        mSquare.setTexture(mSamplerHandle, bmp);
+        mSquare.setTexture(uSamplerHandle, bmp);
         bmp.recycle();
 
+        mSphere = new Sphere(aPositionHandle, aTexCoordHandle);
         bmp = BitmapFactory.decodeResource(getResources(), R.drawable.globe);
-        mSphere.setTexture(mSamplerHandle, bmp);
+        mSphere.setTexture(uSamplerHandle, bmp);
         bmp.recycle();
+        GLToolbox.checkGLError(TAG, "Program and Object for Square/Sphere");
 
-        mObjLoader.load("column.obj");
-        mColumn = new Column(mObjLoader.vertices, mPositionHandle2, mColorHandle2);
+        mProgram2 = GLToolbox.createProgram(readShader(R.raw.position_vertex), readShader(R.raw.solid_fragment));
+        mMVPMatrixHandle2 = GLES20.glGetUniformLocation(mProgram2, "uMVPMatrix");
+        aPositionHandle = GLES20.glGetAttribLocation(mProgram2, "aPosition");
+        int uColorHandle = GLES20.glGetUniformLocation(mProgram2, "uColor");
+        GLES20.glEnableVertexAttribArray(aPositionHandle);
 
-        GLES20.glEnableVertexAttribArray(mPositionHandle0);
-        GLES20.glEnableVertexAttribArray(mColorHandle0);
-        GLES20.glEnableVertexAttribArray(mPositionHandle1);
-        GLES20.glEnableVertexAttribArray(mTexCoordHandle);
-        GLES20.glEnableVertexAttribArray(mPositionHandle2);
+        mColumn = new Column(mObjLoader.vertices, aPositionHandle, uColorHandle);
+        GLToolbox.checkGLError(TAG, "Program and Object for Column");
 
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         GLES20.glEnable(GLES20.GL_CULL_FACE);
     }
 
@@ -191,4 +141,22 @@ public class GLES20Activity extends Activity implements GLSurfaceView.Renderer {
         GLES20.glDeleteProgram(mProgram1);
         GLES20.glDeleteProgram(mProgram2);
     }
+
+    private String readShader(int resId) {
+        InputStream inputStream = getResources().openRawResource(resId);
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+            reader.close();
+            return sb.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }

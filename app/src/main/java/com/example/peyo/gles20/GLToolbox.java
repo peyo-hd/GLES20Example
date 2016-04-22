@@ -17,6 +17,7 @@
 package com.example.peyo.gles20;
 
 import android.opengl.GLES20;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -25,7 +26,15 @@ import java.nio.ShortBuffer;
 
 public class GLToolbox extends GLES20 {
 
-    public static int loadShader(int shaderType, String source) {
+    public static void checkGLError(String tag, String label) {
+        int error;
+        while((error = glGetError()) != GL_NO_ERROR) {
+            Log.e(tag, label + ": glError " + error);
+            throw new RuntimeException(label + ": glError " + error);
+        }
+    }
+
+    private static int loadShader(int shaderType, String source) {
         int shader = glCreateShader(shaderType);
         if (shader != 0) {
             glShaderSource(shader, source);
