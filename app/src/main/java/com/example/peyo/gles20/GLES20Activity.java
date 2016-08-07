@@ -45,13 +45,14 @@ public class GLES20Activity extends Activity implements GLSurfaceView.Renderer {
         view.setEGLContextClientVersion(2);
         view.setRenderer(this);
         setContentView(view);
+        getActionBar().hide();
         mObjLoader = new ObjLoader(this);
-        mObjLoader.load("column.obj");
+        mObjLoader.load(R.raw.column);
     }
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        mProgram0 = GLToolbox.createProgram(readShader(R.raw.color_vertex), readShader(R.raw.color_fragment));
+        mProgram0 = GLToolbox.createProgram(readShader(R.raw.color_vertex_shader), readShader(R.raw.color_fragment_shader));
         mMVPMatrixHandle0 = GLES20.glGetUniformLocation(mProgram0, "uMVPMatrix");
         int aPositionHandle = GLES20.glGetAttribLocation(mProgram0, "aPosition");
         int aColorHandle = GLES20.glGetAttribLocation(mProgram0, "aColor");
@@ -62,7 +63,7 @@ public class GLES20Activity extends Activity implements GLSurfaceView.Renderer {
         mTriangle = new Triangle(aPositionHandle, aColorHandle);
         GLToolbox.checkGLError(TAG, "Program and Object for Grid/Triangle");
 
-        mProgram1 = GLToolbox.createProgram(readShader(R.raw.texture_vertex), readShader(R.raw.texture_fragment));
+        mProgram1 = GLToolbox.createProgram(readShader(R.raw.texture_vertex_shader), readShader(R.raw.texture_fragment_shader));
         mMVPMatrixHandle1 = GLES20.glGetUniformLocation(mProgram1, "uMVPMatrix");
         aPositionHandle = GLES20.glGetAttribLocation(mProgram1, "aPosition");
         int aTexCoordHandle = GLES20.glGetAttribLocation(mProgram1, "aTexCoord");
@@ -81,7 +82,7 @@ public class GLES20Activity extends Activity implements GLSurfaceView.Renderer {
         bmp.recycle();
         GLToolbox.checkGLError(TAG, "Program and Object for Square/Sphere");
 
-        mProgram2 = GLToolbox.createProgram(readShader(R.raw.position_vertex), readShader(R.raw.solid_fragment));
+        mProgram2 = GLToolbox.createProgram(readShader(R.raw.position_vertex_shader), readShader(R.raw.solid_fragment_shader));
         mMVPMatrixHandle2 = GLES20.glGetUniformLocation(mProgram2, "uMVPMatrix");
         aPositionHandle = GLES20.glGetAttribLocation(mProgram2, "aPosition");
         int uColorHandle = GLES20.glGetUniformLocation(mProgram2, "uColor");

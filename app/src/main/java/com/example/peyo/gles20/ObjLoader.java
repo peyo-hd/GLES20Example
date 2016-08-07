@@ -24,36 +24,33 @@ public class ObjLoader {
         this.context = context;
     }
 
-    private void ObjRead(String fileName) {
-        AssetManager assetManager = context.getAssets();
-        InputStream inputStream = null;
+    private void ObjRead(int resId) {
+        InputStream inputStream = context.getResources().openRawResource(resId);
         InputStreamReader inputStreamReader;
         BufferedReader bufferedReader;
         String string = null;
         strings = new ArrayList<String>();
         try {
-            inputStream = assetManager.open(fileName);
             inputStreamReader = new InputStreamReader(inputStream);
             bufferedReader = new BufferedReader(inputStreamReader);
             while ((string = bufferedReader.readLine()) != null) {
                 strings.add(string);
             }
-            Log.d(TAG, fileName + " loaded");
         } catch (IOException e) {
-            Log.d(TAG,"Could not load " + fileName);
+            Log.d(TAG,"Could not load obj file");
             e.printStackTrace();
         } finally {
             if (inputStream != null)
                 try {
                     inputStream.close();
                 } catch (IOException e) {
-                    Log.d(TAG, "Couldn't close " + fileName);
+                    Log.d(TAG, "Couldn't close obj file");
                     e.printStackTrace();
                 }
         }
     }
 
-    public void load(String fileName) {
+    public void load(int resId) {
         int vertexIndex = 0;
         int numVertices = 0;
         int normalIndex = 0;
@@ -63,7 +60,7 @@ public class ObjLoader {
         int fIndex = 0;
         int numFace = 0;
         int v = 0, vn = 0, vt = 0, vf = 0;
-        ObjRead(fileName);
+        ObjRead(resId);
 
         for (int i = 0; i < strings.size(); i++) {
             String string = strings.get(i);
