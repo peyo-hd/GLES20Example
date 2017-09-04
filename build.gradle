@@ -12,10 +12,10 @@ allprojects {
         jcenter()
     }
     project.ext {
-        minSdkVersion=25
+        minSdkVersion=26
         compileSdkVersion=26
         targetSdkVersion=26
-        buildToolsVersion="26.0.0"
+        buildToolsVersion="26.0.1"
     }
 }
 
