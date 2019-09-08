@@ -5,6 +5,7 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.os.Bundle
+import android.os.SystemClock
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -43,12 +44,22 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
     private val projectionMatrix = FloatArray(16)
     private val vPMatrix = FloatArray(16)
 
+    private val rotationMatrix = FloatArray(16)
+    private fun updateAngle() {
+        val time = SystemClock.uptimeMillis() % 4000L
+        val angle = 0.090f * time.toInt()
+        Matrix.setRotateM(rotationMatrix, 0, angle, 0f, 0f, -1.0f)
+    }
+
     override fun onDrawFrame(unused: GL10) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
 
         Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, -3f, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
         Matrix.frustumM(projectionMatrix, 0, -mRatio, mRatio, -1f, 1f, 3f, 7f)
         Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
+
+        updateAngle()
+        Matrix.multiplyMM(vPMatrix, 0, vPMatrix, 0, rotationMatrix, 0)
 
         GLES20.glUseProgram(mProgram0)
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle0, 1, false, vPMatrix, 0)
