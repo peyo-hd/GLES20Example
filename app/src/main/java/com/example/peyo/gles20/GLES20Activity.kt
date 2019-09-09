@@ -34,11 +34,11 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
                 readShader(R.raw.color_fragment_shader))
         mMVPMatrixHandle0 = GLES20.glGetUniformLocation(mProgram0, "uMVPMatrix")
         val positionHandle = GLES20.glGetAttribLocation(mProgram0, "aPosition")
-        val colorHandle = GLES20.glGetUniformLocation(mProgram0, "uColor")
+        val colorHandle = GLES20.glGetAttribLocation(mProgram0, "aColor")
         mTriangle = Triangle(positionHandle, colorHandle)
         GLES20.glEnableVertexAttribArray(positionHandle)
+        GLES20.glEnableVertexAttribArray(colorHandle)
     }
-
 
     private val viewMatrix = FloatArray(16)
     private val projectionMatrix = FloatArray(16)
@@ -54,8 +54,8 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
     override fun onDrawFrame(unused: GL10) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
 
-        Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, -3f, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
-        Matrix.frustumM(projectionMatrix, 0, -mRatio, mRatio, -1f, 1f, 3f, 7f)
+        Matrix.setLookAtM(viewMatrix, 0, 6f, 6f, 6f, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
+        Matrix.perspectiveM(projectionMatrix, 0, 30f, mRatio, 1f, 20f)
         Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
 
         updateAngle()
