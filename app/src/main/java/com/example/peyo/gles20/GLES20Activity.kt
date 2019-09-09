@@ -17,6 +17,8 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
     private var mProgram0: Int = 0
     private var mMVPMatrixHandle0: Int = 0
     private var mRatio = 1.0f
+
+    private lateinit var mGrid: Grid
     private lateinit var mTriangle: Triangle
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,9 +37,13 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
         mMVPMatrixHandle0 = GLES20.glGetUniformLocation(mProgram0, "uMVPMatrix")
         val positionHandle = GLES20.glGetAttribLocation(mProgram0, "aPosition")
         val colorHandle = GLES20.glGetAttribLocation(mProgram0, "aColor")
+
+        mGrid = Grid(positionHandle, colorHandle, mMVPMatrixHandle0)
         mTriangle = Triangle(positionHandle, colorHandle)
         GLES20.glEnableVertexAttribArray(positionHandle)
         GLES20.glEnableVertexAttribArray(colorHandle)
+
+        GLES20.glUseProgram(mProgram0)
     }
 
     private val viewMatrix = FloatArray(16)
@@ -48,7 +54,7 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
     private fun updateAngle() {
         val time = SystemClock.uptimeMillis() % 4000L
         val angle = 0.090f * time.toInt()
-        Matrix.setRotateM(rotationMatrix, 0, angle, 0f, 0f, -1.0f)
+        Matrix.setRotateM(rotationMatrix, 0, angle, 0f, 1f, 0f)
     }
 
     override fun onDrawFrame(unused: GL10) {
@@ -58,11 +64,12 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
         Matrix.perspectiveM(projectionMatrix, 0, 30f, mRatio, 1f, 20f)
         Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
 
+        mGrid.draw(vPMatrix)
+
         updateAngle()
         Matrix.multiplyMM(vPMatrix, 0, vPMatrix, 0, rotationMatrix, 0)
-
-        GLES20.glUseProgram(mProgram0)
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle0, 1, false, vPMatrix, 0)
+
         mTriangle.draw()
     }
 

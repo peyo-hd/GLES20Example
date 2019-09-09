@@ -3,19 +3,16 @@ package com.example.peyo.gles20
 import android.opengl.GLES20
 import java.nio.FloatBuffer
 
-val triangleCoords = floatArrayOf (
-        0f, 2f, 0f,
-        -1f, -1f, 0f,
-        1f, -1f, 0f)
-
-val triangleColors = floatArrayOf (
-        0f, 1f, 0f, 1f,
-        0f, 0f, 1f, 1f,
-        1f, 0f, 0f, 1f )
-
-
 class Triangle(val positionHandle: Int, val colorHandle: Int) : GLES20() {
+    val triangleCoords = floatArrayOf (
+            0f, 1f, -1f,
+            -1f, -1f, 1f,
+            1f, -1f, 1f)
 
+    val triangleColors = floatArrayOf (
+            0f, 1f, 0f, 1f,
+            0f, 0f, 1f, 1f,
+            1f, 0f, 0f, 1f )
     private val vertexCount: Int = triangleCoords.size / 3
     private val vertexBuffer: FloatBuffer = GLToolbox.loadBuffer(triangleCoords)
     private val colorBuffer: FloatBuffer = GLToolbox.loadBuffer(triangleColors)
