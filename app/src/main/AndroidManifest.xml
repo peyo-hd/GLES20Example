@@ -10,6 +10,7 @@
         android:supportsRtl="true">
         <activity
             android:screenOrientation="landscape"
+            android:exported="true"
             android:name=".GLES20Activity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
