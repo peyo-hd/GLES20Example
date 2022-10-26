@@ -1,6 +1,7 @@
 package com.example.peyo.gles20
 
 import android.app.Activity
+import android.graphics.BitmapFactory
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
@@ -13,13 +14,18 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 class GLES20Activity : Activity() , GLSurfaceView.Renderer {
+    private val TAG = "GLES20Activity"
 
     private var mProgram0: Int = 0
     private var mMVPMatrixHandle0: Int = 0
-    private var mRatio = 1.0f
-
-    private lateinit var mGrid: Grid
     private lateinit var mTriangle: Triangle
+    private lateinit var mGrid: Grid
+
+    private var mProgram1: Int = 0
+    private var mMVPMatrixHandle1: Int = 0
+    private lateinit var mSquare: Square
+
+    private var mRatio = 1.0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,15 +41,32 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
         mProgram0 = GLToolbox.createProgram(readShader(R.raw.color_vertex_shader),
                 readShader(R.raw.color_fragment_shader))
         mMVPMatrixHandle0 = GLES20.glGetUniformLocation(mProgram0, "uMVPMatrix")
-        val positionHandle = GLES20.glGetAttribLocation(mProgram0, "aPosition")
-        val colorHandle = GLES20.glGetAttribLocation(mProgram0, "aColor")
+        val aPositionHandle0 = GLES20.glGetAttribLocation(mProgram0, "aPosition")
+        val aColorHandle0 = GLES20.glGetAttribLocation(mProgram0, "aColor")
+        GLES20.glEnableVertexAttribArray(aPositionHandle0)
+        GLES20.glEnableVertexAttribArray(aColorHandle0)
 
-        mGrid = Grid(positionHandle, colorHandle, mMVPMatrixHandle0)
-        mTriangle = Triangle(positionHandle, colorHandle)
-        GLES20.glEnableVertexAttribArray(positionHandle)
-        GLES20.glEnableVertexAttribArray(colorHandle)
+        mGrid = Grid(aPositionHandle0, aColorHandle0, mMVPMatrixHandle0)
+        mTriangle = Triangle(aPositionHandle0, aColorHandle0)
+        GLToolbox.checkGLError(TAG, "Program and Object for Grid/Triangle")
 
-        GLES20.glUseProgram(mProgram0)
+        mProgram1 = GLToolbox.createProgram(readShader(R.raw.texture_vertex_shader),
+                readShader(R.raw.texture_fragment_shader))
+        mMVPMatrixHandle1 = GLES20.glGetUniformLocation(mProgram1, "uMVPMatrix")
+        val aPositionHandle1 = GLES20.glGetAttribLocation(mProgram1, "aPosition")
+        val aTexCoordHandle1 = GLES20.glGetAttribLocation(mProgram1, "aTexCoord")
+        val uSamplerHandle1 = GLES20.glGetUniformLocation(mProgram1, "uSamplerTex")
+        GLES20.glEnableVertexAttribArray(aPositionHandle1)
+        GLES20.glEnableVertexAttribArray(aTexCoordHandle1)
+
+        mSquare = Square(aPositionHandle1, aTexCoordHandle1)
+        val bmp = BitmapFactory.decodeResource(resources, R.drawable.ground)
+        mSquare.setTexture(uSamplerHandle1, bmp)
+        bmp.recycle()
+        GLToolbox.checkGLError(TAG, "Program and Object for Square/Sphere")
+
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
+        GLES20.glEnable(GLES20.GL_CULL_FACE)
     }
 
     private val viewMatrix = FloatArray(16)
@@ -64,12 +87,18 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
         Matrix.perspectiveM(projectionMatrix, 0, 30f, mRatio, 1f, 20f)
         Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
 
+        GLES20.glUseProgram(mProgram0)
         mGrid.draw(vPMatrix)
 
         updateAngle()
         Matrix.multiplyMM(vPMatrix, 0, vPMatrix, 0, rotationMatrix, 0)
-        GLES20.glUniformMatrix4fv(mMVPMatrixHandle0, 1, false, vPMatrix, 0)
 
+        GLES20.glUseProgram(mProgram1)
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle1, 1, false, vPMatrix, 0)
+        mSquare.draw()
+
+        GLES20.glUseProgram(mProgram0)
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle0, 1, false, vPMatrix, 0)
         mTriangle.draw()
     }
 
@@ -81,6 +110,7 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
     override fun onDestroy() {
         super.onDestroy()
         GLES20.glDeleteProgram(mProgram0)
+        GLES20.glDeleteProgram(mProgram1)
     }
 
     private fun readShader(resId: Int): String {
