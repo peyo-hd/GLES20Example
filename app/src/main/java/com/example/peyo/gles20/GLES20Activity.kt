@@ -6,7 +6,6 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.os.Bundle
-import android.os.SystemClock
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -26,6 +25,11 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
     private lateinit var mSquare: Square
     private lateinit var mSphere: Sphere
 
+    private var mProgram2: Int = 0
+    private var mMVPMatrixHandle2: Int = 0
+    private lateinit var mObjLoader: ObjLoader
+    private lateinit var mColumn: Column
+
     private var mAngle = 0f
     private var mRatio = 1.0f
 
@@ -35,6 +39,9 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
         view.setEGLContextClientVersion(2)
         view.setRenderer(this)
         setContentView(view)
+
+        mObjLoader = ObjLoader(this)
+        mObjLoader.load(R.raw.column)
     }
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
@@ -70,8 +77,17 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
         val bmp2 = BitmapFactory.decodeResource(resources, R.drawable.globe)
         mSphere.setTexture(uSamplerHandle1, bmp2)
         bmp2.recycle()
-
         GLToolbox.checkGLError(TAG, "Program and Object for Square/Sphere")
+
+        mProgram2 = GLToolbox.createProgram(readShader(R.raw.position_vertex_shader),
+            readShader(R.raw.solid_fragment_shader))
+        mMVPMatrixHandle2 = GLES20.glGetUniformLocation(mProgram2, "uMVPMatrix")
+        val aPositionHandle2 = GLES20.glGetAttribLocation(mProgram2, "aPosition")
+        val uColorHandle2 = GLES20.glGetUniformLocation(mProgram2, "uColor")
+        GLES20.glEnableVertexAttribArray(aPositionHandle0)
+
+        mColumn = Column(mObjLoader.vertices, aPositionHandle2, uColorHandle2)
+        GLToolbox.checkGLError(TAG, "Program and Object for Column")
 
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         GLES20.glEnable(GLES20.GL_CULL_FACE)
@@ -110,6 +126,10 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle1, 1, false, mvpMatrix2, 0)
         mSphere.draw()
 
+        GLES20.glUseProgram(mProgram2);
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle2, 1, false, mvpMatrix2, 0);
+        mColumn.draw();
+
         mAngle += 2f
     }
 
@@ -122,6 +142,7 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
         super.onDestroy()
         GLES20.glDeleteProgram(mProgram0)
         GLES20.glDeleteProgram(mProgram1)
+        GLES20.glDeleteProgram(mProgram2)
     }
 
     private fun readShader(resId: Int): String {
