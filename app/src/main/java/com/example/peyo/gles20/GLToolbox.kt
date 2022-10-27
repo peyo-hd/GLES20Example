@@ -90,6 +90,13 @@ class GLToolbox : GLES20() {
             glBindBuffer(GL_ARRAY_BUFFER, 0)
         }
 
+        fun loadFloatVBO(vbo: IntArray, fbuffer: FloatBuffer) {
+            glGenBuffers(1, vbo, 0)
+            glBindBuffer(GL_ARRAY_BUFFER, vbo[0])
+            glBufferData(GL_ARRAY_BUFFER, fbuffer.capacity() * 4, fbuffer, GL_STATIC_DRAW)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
+        }
+
         fun loadElementVBO(vbo: IntArray, sarray: ShortArray) {
             val buffer = loadBuffer(sarray)
             glGenBuffers(1, vbo, 0)
@@ -97,6 +104,12 @@ class GLToolbox : GLES20() {
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, buffer.capacity() * 2, buffer, GL_STATIC_DRAW)
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
         }
-    }
 
+        fun loadElementVBO(vbo: IntArray, sbuffer: ShortBuffer) {
+            glGenBuffers(1, vbo, 0)
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[0])
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sbuffer.capacity() * 2, sbuffer, GL_STATIC_DRAW)
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+        }
+    }
 }

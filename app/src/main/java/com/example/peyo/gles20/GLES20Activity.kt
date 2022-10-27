@@ -24,7 +24,9 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
     private var mProgram1: Int = 0
     private var mMVPMatrixHandle1: Int = 0
     private lateinit var mSquare: Square
+    private lateinit var mSphere: Sphere
 
+    private var mAngle = 0f
     private var mRatio = 1.0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,9 +62,15 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
         GLES20.glEnableVertexAttribArray(aTexCoordHandle1)
 
         mSquare = Square(aPositionHandle1, aTexCoordHandle1)
-        val bmp = BitmapFactory.decodeResource(resources, R.drawable.ground)
-        mSquare.setTexture(uSamplerHandle1, bmp)
-        bmp.recycle()
+        val bmp1 = BitmapFactory.decodeResource(resources, R.drawable.ground)
+        mSquare.setTexture(uSamplerHandle1, bmp1)
+        bmp1.recycle()
+
+        mSphere = Sphere(aPositionHandle1, aTexCoordHandle1)
+        val bmp2 = BitmapFactory.decodeResource(resources, R.drawable.globe)
+        mSphere.setTexture(uSamplerHandle1, bmp2)
+        bmp2.recycle()
+
         GLToolbox.checkGLError(TAG, "Program and Object for Square/Sphere")
 
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
@@ -73,33 +81,36 @@ class GLES20Activity : Activity() , GLSurfaceView.Renderer {
     private val projectionMatrix = FloatArray(16)
     private val vPMatrix = FloatArray(16)
 
-    private val rotationMatrix = FloatArray(16)
-    private fun updateAngle() {
-        val time = SystemClock.uptimeMillis() % 4000L
-        val angle = 0.090f * time.toInt()
-        Matrix.setRotateM(rotationMatrix, 0, angle, 0f, 1f, 0f)
-    }
-
     override fun onDrawFrame(unused: GL10) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
 
-        Matrix.setLookAtM(viewMatrix, 0, 6f, 6f, 6f, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
+        Matrix.setLookAtM(viewMatrix, 0, 6f, 6f, 6f, 0f,
+            (0.5 * Math.sin((mAngle / 40).toDouble())).toFloat(),
+            0f, 0f, 1.0f, 0.0f)
         Matrix.perspectiveM(projectionMatrix, 0, 30f, mRatio, 1f, 20f)
         Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
 
         GLES20.glUseProgram(mProgram0)
         mGrid.draw(vPMatrix)
 
-        updateAngle()
-        Matrix.multiplyMM(vPMatrix, 0, vPMatrix, 0, rotationMatrix, 0)
+        val mvpMatrix1 = FloatArray(16)
+        Matrix.translateM(mvpMatrix1, 0, vPMatrix, 0, -4f, 0f, -4f)
 
         GLES20.glUseProgram(mProgram1)
-        GLES20.glUniformMatrix4fv(mMVPMatrixHandle1, 1, false, vPMatrix, 0)
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle1, 1, false, mvpMatrix1, 0)
         mSquare.draw()
 
         GLES20.glUseProgram(mProgram0)
-        GLES20.glUniformMatrix4fv(mMVPMatrixHandle0, 1, false, vPMatrix, 0)
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle0, 1, false, mvpMatrix1, 0)
         mTriangle.draw()
+
+        val mvpMatrix2 = FloatArray(16)
+        Matrix.rotateM(mvpMatrix2, 0, vPMatrix, 0, mAngle, 0f, 1f, 0f)
+        GLES20.glUseProgram(mProgram1)
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle1, 1, false, mvpMatrix2, 0)
+        mSphere.draw()
+
+        mAngle += 2f
     }
 
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
